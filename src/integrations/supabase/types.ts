@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_traces: {
+        Row: {
+          agent_name: string
+          created_at: string
+          duration_ms: number | null
+          id: string
+          input: string | null
+          metadata: Json | null
+          output: string | null
+          session_id: string
+          status: string | null
+          tool_calls: Json | null
+          trace_type: string
+        }
+        Insert: {
+          agent_name?: string
+          created_at?: string
+          duration_ms?: number | null
+          id?: string
+          input?: string | null
+          metadata?: Json | null
+          output?: string | null
+          session_id: string
+          status?: string | null
+          tool_calls?: Json | null
+          trace_type?: string
+        }
+        Update: {
+          agent_name?: string
+          created_at?: string
+          duration_ms?: number | null
+          id?: string
+          input?: string | null
+          metadata?: Json | null
+          output?: string | null
+          session_id?: string
+          status?: string | null
+          tool_calls?: Json | null
+          trace_type?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           content: string
@@ -161,6 +203,33 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       refill_alerts: {
         Row: {
           created_at: string
@@ -194,15 +263,83 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      webhook_logs: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string | null
+          payload: Json | null
+          response_body: string | null
+          response_status: number | null
+          status: string | null
+          webhook_type: string
+          webhook_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          payload?: Json | null
+          response_body?: string | null
+          response_status?: number | null
+          status?: string | null
+          webhook_type: string
+          webhook_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          payload?: Json | null
+          response_body?: string | null
+          response_status?: number | null
+          status?: string | null
+          webhook_type?: string
+          webhook_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_logs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "consumer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -329,6 +466,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "consumer"],
+    },
   },
 } as const

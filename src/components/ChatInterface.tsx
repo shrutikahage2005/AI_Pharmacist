@@ -1,20 +1,23 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Send, Mic, MicOff, Bot, User, Pill, Loader2 } from "lucide-react";
+import { Send, Mic, MicOff, Bot, User, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { medicines } from "@/data/medicines";
+import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
+import { useAuth } from "@/hooks/useAuth";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pharmacist-chat`;
 
 export default function ChatInterface() {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<Msg[]>([
     { role: "assistant", content: "👋 Hello! I'm **PharmaCare AI**, your personal pharmacist assistant. I can help you:\n\n- 💊 Order medicines & check availability\n- 📋 Verify prescriptions\n- 🔄 Set up automatic refills\n- ❓ Answer health questions\n\nHow can I help you today?" }
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [sessionId] = useState(() => crypto.randomUUID());
   const bottomRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
 
@@ -44,6 +47,42 @@ export default function ChatInterface() {
     setIsListening(false);
   }, []);
 
+  const processOrderIfDetected = useCallback(async (text: string) => {
+    // Simple order detection from AI response
+    const jsonMatch = text.match(/```json\s*(\{[\s\S]*?"action"\s*:\s*"place_order"[\s\S]*?\})\s*```/);
+    if (!jsonMatch) return;
+    try {
+      const orderData = JSON.parse(jsonMatch[1]);
+      const webhookUrl = localStorage.getItem("zapier_webhook_url") || "";
+      const resp = await fetch(CHAT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          action: "process_order",
+          session_id: sessionId,
+          webhook_url: webhookUrl,
+          data: {
+            medicine: orderData.medicine,
+            quantity: orderData.quantity || 1,
+            patient_id: user?.id || "anonymous",
+          },
+        }),
+      });
+      const result = await resp.json();
+      if (result.success) {
+        setMessages(prev => [...prev, {
+          role: "assistant",
+          content: `✅ **Order Confirmed!** Order #${result.order_id}\n\n${result.message}\n\n📧 Email confirmation sent\n📱 WhatsApp notification sent${webhookUrl ? "\n⚡ Webhook triggered" : ""}`,
+        }]);
+      }
+    } catch (e) {
+      console.error("Order processing error:", e);
+    }
+  }, [sessionId, user]);
+
   const send = useCallback(async () => {
     if (!input.trim() || isLoading) return;
     const userMsg: Msg = { role: "user", content: input.trim() };
@@ -53,7 +92,7 @@ export default function ChatInterface() {
     setIsLoading(true);
 
     let assistantSoFar = "";
-    
+
     try {
       const resp = await fetch(CHAT_URL, {
         method: "POST",
@@ -61,12 +100,13 @@ export default function ChatInterface() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: newMessages.map(m => ({ role: m.role, content: m.content })) }),
+        body: JSON.stringify({
+          messages: newMessages.map(m => ({ role: m.role, content: m.content })),
+          session_id: sessionId,
+        }),
       });
 
-      if (!resp.ok || !resp.body) {
-        throw new Error("Failed to connect to AI");
-      }
+      if (!resp.ok || !resp.body) throw new Error("Failed to connect to AI");
 
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();
@@ -105,17 +145,21 @@ export default function ChatInterface() {
           }
         }
       }
+
+      // Check if AI response contains an order action
+      if (assistantSoFar) {
+        processOrderIfDetected(assistantSoFar);
+      }
     } catch (e) {
       console.error(e);
       setMessages(prev => [...prev, { role: "assistant", content: "⚠️ Sorry, I'm having trouble connecting. Please try again." }]);
     } finally {
       setIsLoading(false);
     }
-  }, [input, messages, isLoading]);
+  }, [input, messages, isLoading, sessionId, processOrderIfDetected]);
 
   return (
     <div className="flex flex-col h-full">
-      {/* Chat messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin">
         {messages.map((msg, i) => (
           <div key={i} className={`flex gap-3 animate-fade-in ${msg.role === "user" ? "justify-end" : ""}`}>
@@ -157,7 +201,6 @@ export default function ChatInterface() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input area */}
       <div className="border-t border-border p-4">
         <div className="flex items-center gap-2">
           <Button
