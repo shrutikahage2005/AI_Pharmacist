@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 import { useAuth } from "@/hooks/useAuth";
+import UpiQrCode from "@/components/UpiQrCode";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -18,6 +19,7 @@ export default function ChatInterface() {
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [sessionId] = useState(() => crypto.randomUUID());
+  const [qrData, setQrData] = useState<{ amount: number; orderId: string } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
 
@@ -76,6 +78,8 @@ export default function ChatInterface() {
           role: "assistant",
           content: `✅ **Order Confirmed!** Order #${result.order_id}\n\n${result.message}\n\n📧 Email confirmation sent\n📱 WhatsApp notification sent\n⚡ Webhook triggered`,
         }]);
+        // Show UPI QR code
+        setQrData({ amount: result.total_price || orderData.quantity * 100, orderId: result.order_id });
       }
     } catch (e) {
       console.error("Order processing error:", e);
@@ -159,6 +163,7 @@ export default function ChatInterface() {
 
   return (
     <div className="flex flex-col h-full">
+      {qrData && <UpiQrCode amount={qrData.amount} orderId={qrData.orderId} onClose={() => setQrData(null)} />}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin">
         {messages.map((msg, i) => (
           <div key={i} className={`flex gap-3 animate-fade-in ${msg.role === "user" ? "justify-end" : ""}`}>

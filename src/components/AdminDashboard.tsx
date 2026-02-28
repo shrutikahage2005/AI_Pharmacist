@@ -2,18 +2,20 @@ import { Package, AlertTriangle, TrendingUp, Users, ArrowUpRight, ArrowDownRight
 import { medicines } from "@/data/medicines";
 import { orderHistory, getRefillPredictions } from "@/data/orderHistory";
 import { StockBarChart, CategoryPieChart, StockStatusOverview } from "@/components/StockCharts";
+import { useLanguage } from "@/lib/i18n";
 
 export default function AdminDashboard() {
+  const { t } = useLanguage();
   const totalMeds = medicines.length;
   const lowStock = medicines.filter(m => m.stock_level < 20).length;
   const totalRevenue = orderHistory.reduce((s, o) => s + o.total_price, 0);
   const criticalRefills = getRefillPredictions().filter(p => p.urgency === "critical").length;
 
   const stats = [
-    { label: "Total Medicines", value: totalMeds, icon: Package, trend: "+3", up: true, color: "text-primary" },
-    { label: "Low Stock Items", value: lowStock, icon: AlertTriangle, trend: lowStock > 0 ? `${lowStock} items` : "None", up: false, color: "text-destructive" },
-    { label: "Revenue (Sample)", value: `€${totalRevenue.toFixed(0)}`, icon: TrendingUp, trend: "+12%", up: true, color: "text-primary" },
-    { label: "Critical Refills", value: criticalRefills, icon: Users, trend: criticalRefills > 0 ? "Needs attention" : "All good", up: criticalRefills === 0, color: criticalRefills > 0 ? "text-warning" : "text-primary" },
+    { label: t("admin.totalMedicines"), value: totalMeds, icon: Package, trend: "+3", up: true, color: "text-primary" },
+    { label: t("admin.lowStock"), value: lowStock, icon: AlertTriangle, trend: lowStock > 0 ? `${lowStock} items` : "None", up: false, color: "text-destructive" },
+    { label: t("admin.revenue"), value: `₹${totalRevenue.toFixed(0)}`, icon: TrendingUp, trend: "+12%", up: true, color: "text-primary" },
+    { label: t("admin.criticalRefills"), value: criticalRefills, icon: Users, trend: criticalRefills > 0 ? "Needs attention" : "All good", up: criticalRefills === 0, color: criticalRefills > 0 ? "text-warning" : "text-primary" },
   ];
 
   return (
@@ -40,14 +42,14 @@ export default function AdminDashboard() {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 glass-card rounded-xl p-5 animate-fade-in">
-          <h3 className="font-semibold mb-4">Stock Levels (Lowest First)</h3>
+          <h3 className="font-semibold mb-4">{t("admin.stockLevels")}</h3>
           <StockBarChart />
         </div>
         <div className="glass-card rounded-xl p-5 animate-fade-in">
-          <h3 className="font-semibold mb-4">Stock Health</h3>
+          <h3 className="font-semibold mb-4">{t("admin.stockHealth")}</h3>
           <StockStatusOverview />
           <div className="mt-4">
-            <h4 className="text-sm font-medium mb-3">Category Distribution</h4>
+            <h4 className="text-sm font-medium mb-3">{t("admin.categoryDist")}</h4>
             <CategoryPieChart />
           </div>
         </div>
