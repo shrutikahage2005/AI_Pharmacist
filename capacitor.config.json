@@ -1,0 +1,9 @@
+{
+  "appId": "app.lovable.e78b223ba5a24fb7b965265aa18e1c1e",
+  "appName": "PharmaCare AI",
+  "webDir": "dist",
+  "server": {
+    "url": "https://e78b223b-a5a2-4fb7-b965-265aa18e1c1e.lovableproject.com?forceHideBadge=true",
+    "cleartext": true
+  }
+}

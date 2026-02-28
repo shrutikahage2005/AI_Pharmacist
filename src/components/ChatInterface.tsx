@@ -12,7 +12,7 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pharmacist-c
 export default function ChatInterface() {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Msg[]>([
-    { role: "assistant", content: "👋 Hello! I'm **PharmaCare AI**, your personal pharmacist assistant. I can help you:\n\n- 💊 Order medicines & check availability\n- 📋 Verify prescriptions\n- 🔄 Set up automatic refills\n- ❓ Answer health questions\n\nHow can I help you today?" }
+    { role: "assistant", content: `👋 Hello${user?.user_metadata?.display_name ? `, ${user.user_metadata.display_name}` : ""}! I'm **PharmaCare AI**, your personal pharmacist assistant. I can help you:\n\n- 💊 Order medicines & check availability\n- 📋 Verify prescriptions\n- 🔄 Set up automatic refills\n- ❓ Answer health questions\n\nHow can I help you today?` }
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -53,7 +53,6 @@ export default function ChatInterface() {
     if (!jsonMatch) return;
     try {
       const orderData = JSON.parse(jsonMatch[1]);
-      const webhookUrl = localStorage.getItem("zapier_webhook_url") || "";
       const resp = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
@@ -63,7 +62,7 @@ export default function ChatInterface() {
         body: JSON.stringify({
           action: "process_order",
           session_id: sessionId,
-          webhook_url: webhookUrl,
+          user_name: user?.user_metadata?.display_name || user?.email || "Customer",
           data: {
             medicine: orderData.medicine,
             quantity: orderData.quantity || 1,
@@ -75,7 +74,7 @@ export default function ChatInterface() {
       if (result.success) {
         setMessages(prev => [...prev, {
           role: "assistant",
-          content: `✅ **Order Confirmed!** Order #${result.order_id}\n\n${result.message}\n\n📧 Email confirmation sent\n📱 WhatsApp notification sent${webhookUrl ? "\n⚡ Webhook triggered" : ""}`,
+          content: `✅ **Order Confirmed!** Order #${result.order_id}\n\n${result.message}\n\n📧 Email confirmation sent\n📱 WhatsApp notification sent\n⚡ Webhook triggered`,
         }]);
       }
     } catch (e) {
