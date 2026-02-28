@@ -3,23 +3,10 @@ import { MessageSquare, LayoutDashboard, Package, Activity, Bell, Pill, Menu, X,
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/lib/i18n";
 
 type View = "consumer-chat" | "consumer-history" | "consumer-prescription" | "admin-dashboard" | "admin-inventory" | "admin-alerts" | "admin-disease" | "admin-traces" | "admin-workflows";
-
-const consumerNavItems = [
-  { id: "consumer-chat" as View, label: "AI Pharmacist", icon: MessageSquare },
-  { id: "consumer-history" as View, label: "My Orders", icon: History },
-  { id: "consumer-prescription" as View, label: "Upload Rx", icon: FileImage },
-];
-
-const adminNavItems = [
-  { id: "admin-dashboard" as View, label: "Dashboard", icon: LayoutDashboard },
-  { id: "admin-inventory" as View, label: "Inventory", icon: Package },
-  { id: "admin-alerts" as View, label: "Refill Alerts", icon: Bell },
-  { id: "admin-disease" as View, label: "Disease Matrix", icon: Activity },
-  { id: "admin-traces" as View, label: "Agent Traces", icon: Brain },
-  { id: "admin-workflows" as View, label: "Workflows", icon: Zap },
-];
 
 interface AppLayoutProps {
   currentView: View;
@@ -30,12 +17,29 @@ interface AppLayoutProps {
 export default function AppLayout({ currentView, onViewChange, children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, role, signOut } = useAuth();
+  const { t } = useLanguage();
 
-  const allItems = [...consumerNavItems, ...(role === "admin" ? adminNavItems : [])];
+  const consumerNavItems = [
+    { id: "consumer-chat" as View, label: t("nav.aiPharmacist"), icon: MessageSquare },
+    { id: "consumer-history" as View, label: t("nav.myOrders"), icon: History },
+    { id: "consumer-prescription" as View, label: t("nav.uploadRx"), icon: FileImage },
+  ];
 
+  const adminNavItems = [
+    { id: "admin-dashboard" as View, label: t("nav.dashboard"), icon: LayoutDashboard },
+    { id: "admin-inventory" as View, label: t("nav.inventory"), icon: Package },
+    { id: "admin-alerts" as View, label: t("nav.refillAlerts"), icon: Bell },
+    { id: "admin-disease" as View, label: t("nav.diseaseMatrix"), icon: Activity },
+    { id: "admin-traces" as View, label: t("nav.agentTraces"), icon: Brain },
+    { id: "admin-workflows" as View, label: t("nav.workflows"), icon: Zap },
+  ];
+
+  // Admin sees ONLY admin items, consumer sees ONLY consumer items
   const sections = role === "admin"
-    ? [{ label: "Consumer", items: consumerNavItems }, { label: "Admin", items: adminNavItems }]
+    ? [{ label: "Admin", items: adminNavItems }]
     : [{ label: "Menu", items: consumerNavItems }];
+
+  const allItems = role === "admin" ? adminNavItems : consumerNavItems;
 
   return (
     <div className="flex h-screen bg-background">
@@ -89,7 +93,7 @@ export default function AppLayout({ currentView, onViewChange, children }: AppLa
         <div className="px-5 py-4 border-t border-sidebar-border space-y-3">
           <div className="flex items-center gap-2 text-xs text-sidebar-foreground/60">
             <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            <span>AI Agent Active</span>
+            <span>{t("nav.aiActive")}</span>
             <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0">{role || "user"}</Badge>
           </div>
           <button
@@ -97,7 +101,7 @@ export default function AppLayout({ currentView, onViewChange, children }: AppLa
             className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-all"
           >
             <LogOut className="w-4 h-4" />
-            <span>Sign Out</span>
+            <span>{t("nav.signOut")}</span>
           </button>
         </div>
       </aside>
@@ -110,10 +114,11 @@ export default function AppLayout({ currentView, onViewChange, children }: AppLa
           <h2 className="text-lg font-semibold">
             {allItems.find(n => n.id === currentView)?.label}
           </h2>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-3">
+            <LanguageSwitcher />
             <span className="text-xs text-muted-foreground hidden sm:inline">{user?.email}</span>
             <div className="pulse-dot">
-              <span className="text-xs text-muted-foreground hidden sm:inline">Online</span>
+              <span className="text-xs text-muted-foreground hidden sm:inline">{t("nav.online")}</span>
             </div>
           </div>
         </header>

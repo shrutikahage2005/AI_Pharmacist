@@ -96,63 +96,75 @@ serve(async (req) => {
       await logTrace(sessionId, "thought", `Processing order: ${JSON.stringify(data)}`, null, [{ name: "process_order", args: data }]);
 
       const orderId = crypto.randomUUID();
+      let totalPrice = data.total_price || 0;
+      
+      // Fetch medicine price for total calculation
+      if (data.medicine) {
+        const { data: med } = await supabase.from("medicines").select("price, stock_level, id").ilike("product_name", `%${data.medicine}%`).maybeSingle();
+        if (med) {
+          totalPrice = med.price * (data.quantity || 1);
+          await supabase.from("medicines").update({ stock_level: Math.max(0, med.stock_level - (data.quantity || 1)) }).eq("id", med.id);
+        }
+      }
+
       // Insert order into database
       await supabase.from("orders").insert({
         id: orderId,
         patient_id: data.patient_id || "anonymous",
         items: [{ medicine: data.medicine, quantity: data.quantity }],
-        total_price: data.total_price || 0,
+        total_price: totalPrice,
         status: "confirmed",
         webhook_triggered: true,
       });
 
-      // Update stock
-      if (data.medicine) {
-        const { data: med } = await supabase.from("medicines").select("stock_level, id").ilike("product_name", `%${data.medicine}%`).maybeSingle();
-        if (med) {
-          await supabase.from("medicines").update({ stock_level: Math.max(0, med.stock_level - (data.quantity || 1)) }).eq("id", med.id);
-        }
-      }
+      const customerWhatsapp = data.whatsapp || "+91XXXXXXXXXX";
+      const customerEmail = data.email || "customer@example.com";
+      const customerName = user_name || "Customer";
 
-      // Log mock email
+      // Log mock email notification
       await supabase.from("webhook_logs").insert({
         order_id: orderId,
         webhook_type: "mock_email",
-        payload: { to: data.email || "customer@example.com", subject: "Order Confirmed", body: `Your order for ${data.medicine} x${data.quantity} has been confirmed.` },
+        payload: { to: customerEmail, subject: "Order Confirmed - PharmaCare", body: `Dear ${customerName}, your order for ${data.medicine} x${data.quantity} (₹${totalPrice.toFixed(2)}) has been confirmed. Order ID: ${orderId.slice(0, 8).toUpperCase()}` },
         status: "sent",
       });
 
-      // Log mock WhatsApp
+      // Log mock WhatsApp notification
       await supabase.from("webhook_logs").insert({
         order_id: orderId,
         webhook_type: "mock_whatsapp",
-        payload: { to: data.phone || "+49123456789", message: `✅ PharmaCare: Your order #${orderId.slice(0, 8).toUpperCase()} for ${data.medicine} has been confirmed!` },
+        payload: { to: customerWhatsapp, message: `✅ PharmaCare: Hi ${customerName}! Your order #${orderId.slice(0, 8).toUpperCase()} for ${data.medicine} x${data.quantity} (₹${totalPrice.toFixed(2)}) has been confirmed! Track at pharmacare.app` },
         status: "sent",
       });
 
-      // Always trigger webhook (default mock endpoint)
+      // Trigger default webhook
       await triggerWebhook(effectiveWebhookUrl, {
         event: "order_confirmed",
         order_id: orderId,
         medicine: data.medicine,
         quantity: data.quantity,
-        customer_name: user_name || "Customer",
+        total_price: totalPrice,
+        customer_name: customerName,
+        customer_whatsapp: customerWhatsapp,
+        customer_email: customerEmail,
         timestamp: new Date().toISOString(),
         source: "PharmaCare AI Agent",
       });
+
       const duration = Date.now() - startTime;
       await logTrace(sessionId, "tool_call", `Order placed for ${data.medicine}`, `Order ${orderId.slice(0, 8)} confirmed. Stock updated. Notifications sent.`, [
         { name: "insert_order", args: { medicine: data.medicine, quantity: data.quantity } },
         { name: "update_stock", args: { medicine: data.medicine } },
-        { name: "send_email", args: { type: "confirmation" } },
-        { name: "send_whatsapp", args: { type: "confirmation" } },
+        { name: "send_email", args: { to: customerEmail } },
+        { name: "send_whatsapp", args: { to: customerWhatsapp } },
         { name: "trigger_webhook", args: { url: effectiveWebhookUrl } },
       ], duration);
 
       return new Response(JSON.stringify({
         success: true,
         order_id: orderId.slice(0, 8).toUpperCase(),
-        message: "Order placed, stock updated, notifications sent.",
+        total_price: totalPrice,
+        message: `Order placed for ${data.medicine} x${data.quantity}. Total: ₹${totalPrice.toFixed(2)}. Stock updated, notifications sent.`,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

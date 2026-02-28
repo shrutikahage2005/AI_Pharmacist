@@ -1,0 +1,193 @@
+import { createContext, useContext } from "react";
+
+export type Language = "en" | "hi" | "mr";
+
+export const translations: Record<Language, Record<string, string>> = {
+  en: {
+    // Auth
+    "auth.title": "PharmaCare AI",
+    "auth.subtitle": "Agentic AI Pharmacy System",
+    "auth.signIn": "Sign In",
+    "auth.signUp": "Create Account",
+    "auth.email": "Email",
+    "auth.password": "Password",
+    "auth.displayName": "Display Name",
+    "auth.whatsapp": "WhatsApp Number (with country code)",
+    "auth.selectRole": "Select Role",
+    "auth.consumer": "Consumer",
+    "auth.consumerDesc": "Order medicines, chat with AI",
+    "auth.admin": "Admin",
+    "auth.adminDesc": "Manage inventory & analytics",
+    "auth.loading": "Loading...",
+    "auth.haveAccount": "Already have an account?",
+    "auth.noAccount": "Don't have an account?",
+    "auth.accountCreated": "Account created!",
+    "auth.checkEmail": "Please check your email to verify your account.",
+
+    // Navigation
+    "nav.aiPharmacist": "AI Pharmacist",
+    "nav.myOrders": "My Orders",
+    "nav.uploadRx": "Upload Rx",
+    "nav.dashboard": "Dashboard",
+    "nav.inventory": "Inventory",
+    "nav.refillAlerts": "Refill Alerts",
+    "nav.diseaseMatrix": "Disease Matrix",
+    "nav.agentTraces": "Agent Traces",
+    "nav.workflows": "Workflows",
+    "nav.signOut": "Sign Out",
+    "nav.aiActive": "AI Agent Active",
+    "nav.online": "Online",
+
+    // Consumer
+    "consumer.orderHistory": "Order History",
+    "consumer.noOrders": "No orders found",
+    "consumer.uploadPrescription": "Upload Prescription",
+    "consumer.paymentQR": "Scan to Pay",
+    "consumer.orderPlaced": "Order Placed!",
+    "consumer.scanQR": "Scan QR code to pay via UPI",
+    "consumer.amount": "Amount",
+    "consumer.orderId": "Order ID",
+
+    // Admin
+    "admin.totalMedicines": "Total Medicines",
+    "admin.lowStock": "Low Stock Items",
+    "admin.revenue": "Revenue (Sample)",
+    "admin.criticalRefills": "Critical Refills",
+    "admin.stockLevels": "Stock Levels (Lowest First)",
+    "admin.stockHealth": "Stock Health",
+    "admin.categoryDist": "Category Distribution",
+    "admin.refillPredictions": "Proactive Refill Predictions",
+    "admin.refillDesc": "AI-predicted refill needs based on purchase history and dosage patterns",
+    "admin.diseaseTitle": "Disease Prediction Matrix",
+    "admin.diseaseDesc": "Patient health condition distribution by age group",
+
+    // Language
+    "lang.select": "Language",
+  },
+  hi: {
+    "auth.title": "PharmaCare AI",
+    "auth.subtitle": "एजेंटिक AI फार्मेसी सिस्टम",
+    "auth.signIn": "साइन इन करें",
+    "auth.signUp": "खाता बनाएं",
+    "auth.email": "ईमेल",
+    "auth.password": "पासवर्ड",
+    "auth.displayName": "प्रदर्शन नाम",
+    "auth.whatsapp": "WhatsApp नंबर (देश कोड के साथ)",
+    "auth.selectRole": "भूमिका चुनें",
+    "auth.consumer": "उपभोक्ता",
+    "auth.consumerDesc": "दवाइयां ऑर्डर करें, AI से बात करें",
+    "auth.admin": "एडमिन",
+    "auth.adminDesc": "इन्वेंटरी और एनालिटिक्स प्रबंधित करें",
+    "auth.loading": "लोड हो रहा है...",
+    "auth.haveAccount": "पहले से खाता है?",
+    "auth.noAccount": "खाता नहीं है?",
+    "auth.accountCreated": "खाता बनाया गया!",
+    "auth.checkEmail": "कृपया अपना ईमेल सत्यापित करें।",
+
+    "nav.aiPharmacist": "AI फार्मासिस्ट",
+    "nav.myOrders": "मेरे ऑर्डर",
+    "nav.uploadRx": "प्रिस्क्रिप्शन अपलोड",
+    "nav.dashboard": "डैशबोर्ड",
+    "nav.inventory": "इन्वेंटरी",
+    "nav.refillAlerts": "रीफिल अलर्ट",
+    "nav.diseaseMatrix": "रोग मैट्रिक्स",
+    "nav.agentTraces": "एजेंट ट्रेस",
+    "nav.workflows": "वर्कफ़्लो",
+    "nav.signOut": "साइन आउट",
+    "nav.aiActive": "AI एजेंट सक्रिय",
+    "nav.online": "ऑनलाइन",
+
+    "consumer.orderHistory": "ऑर्डर इतिहास",
+    "consumer.noOrders": "कोई ऑर्डर नहीं मिला",
+    "consumer.uploadPrescription": "प्रिस्क्रिप्शन अपलोड करें",
+    "consumer.paymentQR": "भुगतान के लिए स्कैन करें",
+    "consumer.orderPlaced": "ऑर्डर हो गया!",
+    "consumer.scanQR": "UPI से भुगतान के लिए QR कोड स्कैन करें",
+    "consumer.amount": "राशि",
+    "consumer.orderId": "ऑर्डर ID",
+
+    "admin.totalMedicines": "कुल दवाइयां",
+    "admin.lowStock": "कम स्टॉक आइटम",
+    "admin.revenue": "राजस्व (नमूना)",
+    "admin.criticalRefills": "गंभीर रीफिल",
+    "admin.stockLevels": "स्टॉक स्तर (सबसे कम पहले)",
+    "admin.stockHealth": "स्टॉक स्वास्थ्य",
+    "admin.categoryDist": "श्रेणी वितरण",
+    "admin.refillPredictions": "सक्रिय रीफिल भविष्यवाणियां",
+    "admin.refillDesc": "खरीद इतिहास और खुराक पैटर्न पर आधारित AI-अनुमानित रीफिल",
+    "admin.diseaseTitle": "रोग भविष्यवाणी मैट्रिक्स",
+    "admin.diseaseDesc": "आयु वर्ग के अनुसार रोगी स्वास्थ्य स्थिति वितरण",
+
+    "lang.select": "भाषा",
+  },
+  mr: {
+    "auth.title": "PharmaCare AI",
+    "auth.subtitle": "एजेंटिक AI फार्मसी सिस्टम",
+    "auth.signIn": "साइन इन करा",
+    "auth.signUp": "खाते तयार करा",
+    "auth.email": "ईमेल",
+    "auth.password": "पासवर्ड",
+    "auth.displayName": "प्रदर्शन नाव",
+    "auth.whatsapp": "WhatsApp नंबर (देश कोडसह)",
+    "auth.selectRole": "भूमिका निवडा",
+    "auth.consumer": "ग्राहक",
+    "auth.consumerDesc": "औषधे ऑर्डर करा, AI शी बोला",
+    "auth.admin": "अ‍ॅडमिन",
+    "auth.adminDesc": "इन्व्हेंटरी आणि अ‍ॅनालिटिक्स व्यवस्थापित करा",
+    "auth.loading": "लोड होत आहे...",
+    "auth.haveAccount": "आधीच खाते आहे?",
+    "auth.noAccount": "खाते नाही?",
+    "auth.accountCreated": "खाते तयार झाले!",
+    "auth.checkEmail": "कृपया तुमचा ईमेल सत्यापित करा।",
+
+    "nav.aiPharmacist": "AI फार्मासिस्ट",
+    "nav.myOrders": "माझे ऑर्डर",
+    "nav.uploadRx": "प्रिस्क्रिप्शन अपलोड",
+    "nav.dashboard": "डॅशबोर्ड",
+    "nav.inventory": "इन्व्हेंटरी",
+    "nav.refillAlerts": "रीफिल अलर्ट",
+    "nav.diseaseMatrix": "रोग मॅट्रिक्स",
+    "nav.agentTraces": "एजंट ट्रेस",
+    "nav.workflows": "वर्कफ्लो",
+    "nav.signOut": "साइन आउट",
+    "nav.aiActive": "AI एजंट सक्रिय",
+    "nav.online": "ऑनलाइन",
+
+    "consumer.orderHistory": "ऑर्डर इतिहास",
+    "consumer.noOrders": "कोणतेही ऑर्डर सापडले नाहीत",
+    "consumer.uploadPrescription": "प्रिस्क्रिप्शन अपलोड करा",
+    "consumer.paymentQR": "पेमेंटसाठी स्कॅन करा",
+    "consumer.orderPlaced": "ऑर्डर दिला!",
+    "consumer.scanQR": "UPI ने पेमेंट करण्यासाठी QR कोड स्कॅन करा",
+    "consumer.amount": "रक्कम",
+    "consumer.orderId": "ऑर्डर ID",
+
+    "admin.totalMedicines": "एकूण औषधे",
+    "admin.lowStock": "कमी स्टॉक आयटम",
+    "admin.revenue": "महसूल (नमुना)",
+    "admin.criticalRefills": "गंभीर रीफिल",
+    "admin.stockLevels": "स्टॉक पातळी (सर्वात कमी प्रथम)",
+    "admin.stockHealth": "स्टॉक आरोग्य",
+    "admin.categoryDist": "श्रेणी वितरण",
+    "admin.refillPredictions": "सक्रिय रीफिल अंदाज",
+    "admin.refillDesc": "खरेदी इतिहास आणि डोस पॅटर्नवर आधारित AI-अंदाजित रीफिल",
+    "admin.diseaseTitle": "रोग अंदाज मॅट्रिक्स",
+    "admin.diseaseDesc": "वयोगटानुसार रुग्ण आरोग्य स्थिती वितरण",
+
+    "lang.select": "भाषा",
+  },
+};
+
+export const LanguageContext = createContext<{
+  lang: Language;
+  setLang: (l: Language) => void;
+  t: (key: string) => string;
+}>({
+  lang: "en",
+  setLang: () => {},
+  t: (key) => key,
+});
+
+export function useLanguage() {
+  return useContext(LanguageContext);
+}

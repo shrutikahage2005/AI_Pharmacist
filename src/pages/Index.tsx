@@ -10,13 +10,17 @@ import WorkflowAutomation from "@/components/WorkflowAutomation";
 import ConsumerHistory from "@/components/consumer/ConsumerHistory";
 import PrescriptionUpload from "@/components/consumer/PrescriptionUpload";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/lib/i18n";
 
 const Index = () => {
   const { role } = useAuth();
-  const [view, setView] = useState<View>("consumer-chat");
+  const { t } = useLanguage();
+  const defaultView: View = role === "admin" ? "admin-dashboard" : "consumer-chat";
+  const [view, setView] = useState<View>(defaultView);
 
   const handleViewChange = (newView: View) => {
     if (newView.startsWith("admin-") && role !== "admin") return;
+    if (newView.startsWith("consumer-") && role === "admin") return;
     setView(newView);
   };
 
@@ -41,8 +45,8 @@ const Index = () => {
           <div className="p-4 lg:p-6 overflow-y-auto h-full scrollbar-thin">
             <div className="max-w-3xl">
               <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-1">Proactive Refill Predictions</h3>
-                <p className="text-sm text-muted-foreground">AI-predicted refill needs based on purchase history and dosage patterns</p>
+                <h3 className="text-lg font-semibold mb-1">{t("admin.refillPredictions")}</h3>
+                <p className="text-sm text-muted-foreground">{t("admin.refillDesc")}</p>
               </div>
               <RefillAlerts />
             </div>
@@ -52,8 +56,8 @@ const Index = () => {
         return (
           <div className="p-4 lg:p-6 overflow-y-auto h-full scrollbar-thin">
             <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-1">Disease Prediction Matrix</h3>
-              <p className="text-sm text-muted-foreground">Patient health condition distribution by age group</p>
+              <h3 className="text-lg font-semibold mb-1">{t("admin.diseaseTitle")}</h3>
+              <p className="text-sm text-muted-foreground">{t("admin.diseaseDesc")}</p>
             </div>
             <div className="glass-card rounded-xl p-5">
               <DiseaseMatrix />
