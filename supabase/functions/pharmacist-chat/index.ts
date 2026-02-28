@@ -81,10 +81,14 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, action, data, session_id, webhook_url } = await req.json();
+    const { messages, action, data, session_id, webhook_url, user_name } = await req.json();
     const sessionId = session_id || crypto.randomUUID();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    // Default mock webhook endpoint (no manual URL needed)
+    const DEFAULT_WEBHOOK = "https://hooks.zapier.com/hooks/catch/mock/pharmacare";
+    const effectiveWebhookUrl = webhook_url || DEFAULT_WEBHOOK;
 
     // Handle tool actions directly
     if (action === "process_order") {
@@ -99,7 +103,7 @@ serve(async (req) => {
         items: [{ medicine: data.medicine, quantity: data.quantity }],
         total_price: data.total_price || 0,
         status: "confirmed",
-        webhook_triggered: !!webhook_url,
+        webhook_triggered: true,
       });
 
       // Update stock
@@ -126,25 +130,23 @@ serve(async (req) => {
         status: "sent",
       });
 
-      // Trigger real webhook if provided
-      if (webhook_url) {
-        await triggerWebhook(webhook_url, {
-          event: "order_confirmed",
-          order_id: orderId,
-          medicine: data.medicine,
-          quantity: data.quantity,
-          timestamp: new Date().toISOString(),
-          source: "PharmaCare AI Agent",
-        });
-      }
-
+      // Always trigger webhook (default mock endpoint)
+      await triggerWebhook(effectiveWebhookUrl, {
+        event: "order_confirmed",
+        order_id: orderId,
+        medicine: data.medicine,
+        quantity: data.quantity,
+        customer_name: user_name || "Customer",
+        timestamp: new Date().toISOString(),
+        source: "PharmaCare AI Agent",
+      });
       const duration = Date.now() - startTime;
       await logTrace(sessionId, "tool_call", `Order placed for ${data.medicine}`, `Order ${orderId.slice(0, 8)} confirmed. Stock updated. Notifications sent.`, [
         { name: "insert_order", args: { medicine: data.medicine, quantity: data.quantity } },
         { name: "update_stock", args: { medicine: data.medicine } },
         { name: "send_email", args: { type: "confirmation" } },
         { name: "send_whatsapp", args: { type: "confirmation" } },
-        ...(webhook_url ? [{ name: "trigger_webhook", args: { url: webhook_url } }] : []),
+        { name: "trigger_webhook", args: { url: effectiveWebhookUrl } },
       ], duration);
 
       return new Response(JSON.stringify({

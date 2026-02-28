@@ -2,3 +2,6 @@ project_id = "wgtnoruqifiyggpimwgv"
 
 [functions.pharmacist-chat]
 verify_jwt = false
+
+[functions.prescription-ocr]
+verify_jwt = false

@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { MessageSquare, LayoutDashboard, Package, Activity, Bell, Pill, Menu, X, ChevronRight, LogOut, Brain, Zap } from "lucide-react";
+import { MessageSquare, LayoutDashboard, Package, Activity, Bell, Pill, Menu, X, ChevronRight, LogOut, Brain, Zap, History, FileImage } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
 
-type View = "consumer-chat" | "admin-dashboard" | "admin-inventory" | "admin-alerts" | "admin-disease" | "admin-traces" | "admin-workflows";
+type View = "consumer-chat" | "consumer-history" | "consumer-prescription" | "admin-dashboard" | "admin-inventory" | "admin-alerts" | "admin-disease" | "admin-traces" | "admin-workflows";
 
 const consumerNavItems = [
   { id: "consumer-chat" as View, label: "AI Pharmacist", icon: MessageSquare },
+  { id: "consumer-history" as View, label: "My Orders", icon: History },
+  { id: "consumer-prescription" as View, label: "Upload Rx", icon: FileImage },
 ];
 
 const adminNavItems = [

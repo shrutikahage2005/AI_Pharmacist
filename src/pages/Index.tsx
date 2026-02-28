@@ -7,6 +7,8 @@ import RefillAlerts from "@/components/RefillAlerts";
 import DiseaseMatrix from "@/components/DiseaseMatrix";
 import AgentTraceViewer from "@/components/AgentTraceViewer";
 import WorkflowAutomation from "@/components/WorkflowAutomation";
+import ConsumerHistory from "@/components/consumer/ConsumerHistory";
+import PrescriptionUpload from "@/components/consumer/PrescriptionUpload";
 import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
@@ -22,6 +24,10 @@ const Index = () => {
     switch (view) {
       case "consumer-chat":
         return <ChatInterface />;
+      case "consumer-history":
+        return <ConsumerHistory />;
+      case "consumer-prescription":
+        return <PrescriptionUpload />;
       case "admin-dashboard":
         return <AdminDashboard />;
       case "admin-inventory":
