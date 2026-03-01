@@ -120,20 +120,42 @@ serve(async (req) => {
       const customerWhatsapp = data.whatsapp || "+91XXXXXXXXXX";
       const customerEmail = data.email || "customer@example.com";
       const customerName = user_name || "Customer";
+      const orderShortId = orderId.slice(0, 8).toUpperCase();
+      const whatsappMessage = `✅ PharmaCare: Hi ${customerName}! Your order #${orderShortId} for ${data.medicine} x${data.quantity} (₹${totalPrice.toFixed(2)}) has been confirmed! Pay via UPI QR shown in app. Track at pharmacare.app`;
 
-      // Log mock email notification
+      // Send real WhatsApp notification via Twilio
+      let whatsappStatus = "failed";
+      try {
+        const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+        const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+        const twResp = await fetch(`${SUPABASE_URL}/functions/v1/send-whatsapp`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ to: customerWhatsapp, message: whatsappMessage }),
+        });
+        const twResult = await twResp.json();
+        whatsappStatus = twResp.ok ? "sent" : "failed";
+        console.log("Twilio result:", twResult);
+      } catch (twErr) {
+        console.error("Twilio call error:", twErr);
+      }
+
+      // Log WhatsApp notification
       await supabase.from("webhook_logs").insert({
         order_id: orderId,
-        webhook_type: "mock_email",
-        payload: { to: customerEmail, subject: "Order Confirmed - PharmaCare", body: `Dear ${customerName}, your order for ${data.medicine} x${data.quantity} (₹${totalPrice.toFixed(2)}) has been confirmed. Order ID: ${orderId.slice(0, 8).toUpperCase()}` },
-        status: "sent",
+        webhook_type: "twilio_whatsapp",
+        payload: { to: customerWhatsapp, message: whatsappMessage },
+        status: whatsappStatus,
       });
 
-      // Log mock WhatsApp notification
+      // Log email notification (mock)
       await supabase.from("webhook_logs").insert({
         order_id: orderId,
-        webhook_type: "mock_whatsapp",
-        payload: { to: customerWhatsapp, message: `✅ PharmaCare: Hi ${customerName}! Your order #${orderId.slice(0, 8).toUpperCase()} for ${data.medicine} x${data.quantity} (₹${totalPrice.toFixed(2)}) has been confirmed! Track at pharmacare.app` },
+        webhook_type: "email_notification",
+        payload: { to: customerEmail, subject: "Order Confirmed - PharmaCare", body: `Dear ${customerName}, your order for ${data.medicine} x${data.quantity} (₹${totalPrice.toFixed(2)}) has been confirmed. Order ID: ${orderShortId}` },
         status: "sent",
       });
 
